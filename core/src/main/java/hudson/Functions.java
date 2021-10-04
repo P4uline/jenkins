@@ -153,6 +153,9 @@ import jenkins.model.ModelObjectWithChildren;
 import jenkins.model.ModelObjectWithContextMenu;
 import jenkins.model.SimplePageDecorator;
 import jenkins.util.SystemProperties;
+import jenkins.views.Header;
+import jenkins.views.JenkinsHeader;
+
 import org.apache.commons.jelly.JellyContext;
 import org.apache.commons.jelly.JellyTagException;
 import org.apache.commons.jelly.Script;
@@ -2281,5 +2284,19 @@ public class Functions {
         } else {
             return true;
         }
+    }
+    
+    @Restricted(NoExternalUse.class)
+    @CheckForNull
+    public static Header header() {
+        List<Header> headers = ExtensionList.lookup(Header.class).stream().filter(header -> header.isHeaderEnabled()).collect(Collectors.toList());
+        Header header = headers.stream().max(Comparator.comparing(Header::priority)).get();
+        for(Header h: headers) {
+            if (!h.equals(header) && h.priority().equals(header.priority())) {
+                LOGGER.warning("Unable to have two or more headers with same priority enabled! Providing default Jenkins header ...");
+                return new JenkinsHeader();
+            }
+        }
+        return header;
     }
 }
